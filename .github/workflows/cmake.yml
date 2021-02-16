@@ -37,7 +37,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
+        cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}} ..
     - name: build
       run: cmake --build build --config ${{matrix.config.build_type}}
 
