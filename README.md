@@ -10,7 +10,17 @@ Blowfish is a symmetric block cipher that can be used as a drop-in replacement f
 This is a C++ implementation of the encryption algorithm.
 
 ## How to use this in your project?
-*will be updated soon*
+1. You may fork it and use it like any other source file in your project. You only need [blowfish.hpp](include/blowfish/blowfish.hpp) and [blowfish.cpp](src/blowfish.cpp) files. Just modify the header as per your convienence. 
+2. If you are using CMake, the work is lot easier. You can add this as a git submodule. It isolates your project from this dependency. 
+  ```bash
+    # In your project root type these commands
+    git submodule add https://github.com/avinal/blowfish
+    # considering this addition is your only change
+    git commit -m "blowfish submodule added"
+    git push origin main
+ ```
+ Add this to your CMakeLists.txt as well.
+    
 
 ## References
 - [Description of a new variable-length key, 64-bit block cipher (Blowfish)](https://link.springer.com/chapter/10.1007/3-540-58108-1_24)
