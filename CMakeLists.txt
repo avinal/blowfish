@@ -13,10 +13,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message (STATUS "CMake version: ${CMAKE_VERSION}")
 message (STATUS "Project version: ${PROJECT_VERSION}")
 
-set(BLOWFISH_SRC ${PROJECT_SOURCE_DIR}/src/blowfish.cpp)
+set(BLOWFISH_SRC ${PROJECT_SOURCE_DIR}/src/blowfish.cc)
 source_group(src FILES ${BLOWFISH_SRC})
 
-set(BLOWFISH_INC ${PROJECT_SOURCE_DIR}/include/blowfish/blowfish.hpp)
+set(BLOWFISH_INC ${PROJECT_SOURCE_DIR}/include/blowfish/blowfish.h)
 source_group(include FILES ${BLOWFISH_INC})
 
 set(BLOWFISH_DOC 
