@@ -7,9 +7,7 @@
  * Blowfish Implementation
  */
 
-#include <blowfish/blowfish.hpp>
-
-#define N 16
+#include <blowfish/blowfish.h>
 
 static const std::array<DWORD, 16 + 2> P = {
     0x243F6A88L, 0x85A308D3L, 0x13198A2EL, 0x03707344L, 0xA4093822L,
@@ -230,17 +228,15 @@ static const std::array<std::array<DWORD, 256>, 4> S = {
       0x3F09252DL, 0xC208E69FL, 0xB74E6132L, 0xCE77E25BL, 0x578FDFE3L,
       0x3AC372E6L}}};
 
-blowfish::blowfish(BYTE *key, WORD keylength) {
+Blowfish::Blowfish(std::string const &key) {
   DWORD data, datal, datar;
-
   Sboxes = S;
-  WORD j = 0;
+  WORD j = 0, keylength = key.length();
   for (WORD i = 0; i < N + 2; ++i) {
     data = 0x00000000;
     for (WORD k = 0; k < 4; ++k) {
       data = (data << 8) | key[j];
-      j++;
-      if (j >= keylength) {
+      if (++j >= keylength) {
         j = 0;
       }
     }
@@ -250,21 +246,21 @@ blowfish::blowfish(BYTE *key, WORD keylength) {
   datar = 0x00000000;
 
   for (WORD i = 0; i < N + 2; i += 2) {
-    encrypt(&datal, &datar);
+    encrypt(datal, datar);
     PArray[i] = datal;
     PArray[i + 1] = datar;
   }
 
   for (WORD i = 0; i < 4; ++i) {
     for (WORD k = 0; k < 256; k += 2) {
-      encrypt(&datal, &datar);
+      encrypt(datal, datar);
       Sboxes[i][j] = datal;
       Sboxes[i][j + 1] = datar;
     }
   }
 }
 
-DWORD blowfish::F(DWORD x) {
+DWORD Blowfish::F(DWORD x) {
   unsigned short a, b, c, d;
   DWORD y;
 
@@ -284,9 +280,9 @@ DWORD blowfish::F(DWORD x) {
   return y;
 }
 
-void blowfish::encrypt(DWORD *xl, DWORD *xr) {
-  DWORD Xl = *xl;
-  DWORD Xr = *xr;
+void Blowfish::encrypt(DWORD &xl, DWORD &xr) {
+  DWORD Xl = xl;
+  DWORD Xr = xr;
 
   for (WORD i = 0; i < N; ++i) {
     Xl ^= PArray[i];
@@ -297,13 +293,13 @@ void blowfish::encrypt(DWORD *xl, DWORD *xr) {
   std::swap(Xl, Xr);
   Xr ^= PArray[N];
   Xl ^= PArray[N + 1];
-  *xl = Xl;
-  *xr = Xr;
+  xl = Xl;
+  xr = Xr;
 }
 
-void blowfish::decrypt(DWORD *xl, DWORD *xr) {
-  DWORD Xl = *xl;
-  DWORD Xr = *xr;
+void Blowfish::decrypt(DWORD &xl, DWORD &xr) {
+  DWORD Xl = xl;
+  DWORD Xr = xr;
 
   for (WORD i = N + 1; i > 1; --i) {
     Xl = Xl ^= PArray[i];
@@ -314,6 +310,6 @@ void blowfish::decrypt(DWORD *xl, DWORD *xr) {
   std::swap(Xl, Xr);
   Xr ^= PArray[1];
   Xl ^= PArray[0];
-  *xl = Xl;
-  *xr = Xr;
+  xl = Xl;
+  xr = Xr;
 }
