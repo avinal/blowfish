@@ -9,13 +9,13 @@
 
 #include <blowfish/blowfish.h>
 
-static const std::array<DWORD, 16 + 2> P = {
+static const std::array<uint32_t, 16 + 2> P = {
     0x243F6A88L, 0x85A308D3L, 0x13198A2EL, 0x03707344L, 0xA4093822L,
     0x299F31D0L, 0x082EFA98L, 0xEC4E6C89L, 0x452821E6L, 0x38D01377L,
     0xBE5466CFL, 0x34E90C6CL, 0xC0AC29B7L, 0xC97C50DDL, 0x3F84D5B5L,
     0xB5470917L, 0x9216D5D9L, 0x8979FB1BL};
 
-static const std::array<std::array<DWORD, 256>, 4> S = {
+static const std::array<std::array<uint32_t, 256>, 4> S = {
     {{0xD1310BA6L, 0x98DFB5ACL, 0x2FFD72DBL, 0xD01ADFB7L, 0xB8E1AFEDL,
       0x6A267E96L, 0xBA7C9045L, 0xF12C7F99L, 0x24A19947L, 0xB3916CF7L,
       0x0801F2E2L, 0x858EFC16L, 0x636920D8L, 0x71574E69L, 0xA458FEA3L,
@@ -228,13 +228,13 @@ static const std::array<std::array<DWORD, 256>, 4> S = {
       0x3F09252DL, 0xC208E69FL, 0xB74E6132L, 0xCE77E25BL, 0x578FDFE3L,
       0x3AC372E6L}}};
 
-Blowfish::Blowfish(std::string const &key) {
-  DWORD data, datal, datar;
+void Blowfish::initialize(std::string const &key) {
+  uint32_t data, datal, datar;
   Sboxes = S;
-  WORD j = 0, keylength = key.length();
-  for (WORD i = 0; i < N + 2; ++i) {
+  uint32_t j = 0, keylength = key.length();
+  for (uint32_t i = 0; i < N + 2; ++i) {
     data = 0x00000000;
-    for (WORD k = 0; k < 4; ++k) {
+    for (uint32_t k = 0; k < 4; ++k) {
       data = (data << 8) | key[j];
       if (++j >= keylength) {
         j = 0;
@@ -245,14 +245,14 @@ Blowfish::Blowfish(std::string const &key) {
   datal = 0x00000000;
   datar = 0x00000000;
 
-  for (WORD i = 0; i < N + 2; i += 2) {
+  for (uint32_t i = 0; i < N + 2; i += 2) {
     encrypt(datal, datar);
     PArray[i] = datal;
     PArray[i + 1] = datar;
   }
 
-  for (WORD i = 0; i < 4; ++i) {
-    for (WORD k = 0; k < 256; k += 2) {
+  for (uint32_t i = 0; i < 4; ++i) {
+    for (uint32_t k = 0; k < 256; k += 2) {
       encrypt(datal, datar);
       Sboxes[i][j] = datal;
       Sboxes[i][j + 1] = datar;
@@ -260,9 +260,11 @@ Blowfish::Blowfish(std::string const &key) {
   }
 }
 
-DWORD Blowfish::F(DWORD x) {
-  unsigned short a, b, c, d;
-  DWORD y;
+Blowfish::Blowfish(std::string const &key) { initialize(key); }
+
+uint32_t Blowfish::F(uint32_t x) {
+  uint16_t a, b, c, d;
+  uint32_t y;
 
   d = x & 0x00FF;
   x >>= 8;
@@ -280,11 +282,11 @@ DWORD Blowfish::F(DWORD x) {
   return y;
 }
 
-void Blowfish::encrypt(DWORD &xl, DWORD &xr) {
-  DWORD Xl = xl;
-  DWORD Xr = xr;
+void Blowfish::encrypt(uint32_t &xl, uint32_t &xr) {
+  uint32_t Xl = xl;
+  uint32_t Xr = xr;
 
-  for (WORD i = 0; i < N; ++i) {
+  for (uint32_t i = 0; i < N; ++i) {
     Xl ^= PArray[i];
     Xr = F(Xl) ^ Xr;
     std::swap(Xl, Xr);
@@ -297,12 +299,12 @@ void Blowfish::encrypt(DWORD &xl, DWORD &xr) {
   xr = Xr;
 }
 
-void Blowfish::decrypt(DWORD &xl, DWORD &xr) {
-  DWORD Xl = xl;
-  DWORD Xr = xr;
+void Blowfish::decrypt(uint32_t &xl, uint32_t &xr) {
+  uint32_t Xl = xl;
+  uint32_t Xr = xr;
 
-  for (WORD i = N + 1; i > 1; --i) {
-    Xl = Xl ^= PArray[i];
+  for (uint32_t i = N + 1; i > 1; --i) {
+    Xl ^= PArray[i];
     Xr = F(Xl) ^ Xr;
     std::swap(Xl, Xr);
   }
