@@ -1,18 +1,16 @@
-/*
- * @file blowfish.hpp
- * @author Avinal Kumar
- * @since February 15, 2021
- *
- * Blowfish Algorithm Header File
- */
+// SPDX-FileCopyrightText: 2024 Avinal Kumar avinal.xlvii@gmail.com
+// SPDX-License-Identifier: MIT
+
+// Original Blowfish Algorithm copyright:
+// SPDX-FileCopyrightText: 1997 Paul Kocher
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <string>
 
 #define MAXKEYBYTES 56 // 448 bits max
 #define N 16
-
 
 #if !defined(BLOWFISH_BLOWFISH_H_)
 #define BLOWFISH_BLOWFISH_H_
