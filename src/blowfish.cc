@@ -1,11 +1,8 @@
-/**
- * /mnt/z/my_git/blowfish/include/blowfish.cpp
- * @file blowfish.cpp
- * @author Avinal Kumar
- * @since February 16, 2021
- *
- * Blowfish Implementation
- */
+// SPDX-FileCopyrightText: 2024 Avinal Kumar avinal.xlvii@gmail.com
+// SPDX-License-Identifier: MIT
+
+// Original Blowfish Algorithm copyright:
+// SPDX-FileCopyrightText: 1997 Paul Kocher
 
 #include <blowfish/blowfish.h>
 
@@ -254,8 +251,8 @@ void Blowfish::initialize(std::string const &key) {
   for (uint32_t i = 0; i < 4; ++i) {
     for (uint32_t k = 0; k < 256; k += 2) {
       encrypt(datal, datar);
-      Sboxes[i][j] = datal;
-      Sboxes[i][j + 1] = datar;
+      Sboxes[i][k] = datal;
+      Sboxes[i][k + 1] = datar;
     }
   }
 }
@@ -266,15 +263,15 @@ uint32_t Blowfish::F(uint32_t x) {
   uint16_t a, b, c, d;
   uint32_t y;
 
-  d = x & 0x00FF;
+  d = (unsigned int)(x & 0xFF);
   x >>= 8;
-  d = x & 0x00FF;
+  d = (unsigned int)(x & 0xFF);
   x >>= 8;
-  c = x & 0x00FF;
+  c = (unsigned int)(x & 0xFF);
   x >>= 8;
-  b = x & 0x00FF;
+  b = (unsigned int)(x & 0xFF);
   x >>= 8;
-  a = x & 0x00FF;
+  a = (unsigned int)(x & 0xFF);
 
   y = Sboxes[0][a] + Sboxes[1][b];
   y ^= Sboxes[2][c];
