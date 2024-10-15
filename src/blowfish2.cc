@@ -733,7 +733,7 @@ void Blowfish2::initialize(std::string const &key) {
   uint64_t j = 0, keylength = key.length();
   for (uint64_t i = 0; i < N + 2; ++i) {
     data = 0x00000000;
-    for (uint64_t k = 0; k < 4; ++k) {
+    for (uint64_t k = 0; k < 8; ++k) {
       data = (data << 8) | key[j];
       if (++j >= keylength) {
         j = 0;
@@ -750,7 +750,7 @@ void Blowfish2::initialize(std::string const &key) {
     PArray[i + 1] = datar;
   }
 
-  for (uint64_t i = 0; i < 4; ++i) {
+  for (uint64_t i = 0; i < 8; ++i) {
     for (uint64_t k = 0; k < 256; k += 2) {
       encrypt(datal, datar);
       Sboxes[i][k] = datal;
