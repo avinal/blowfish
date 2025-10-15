@@ -1,33 +1,29 @@
-name: build
+name: Build C++ Project
 
 on: [push]
 
 jobs:
   build:
-    name: ${{ matrix.config.name }}
-    runs-on: ${{ matrix.config.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-        - {
-            name: "Ubuntu Latest GCC",
-            os: ubuntu-latest,
-            build_type: "Debug", cc: "gcc", cxx: "g++"
-          }
+    name: Build on Ubuntu with GCC
+    runs-on: ubuntu-latest # For Gitea, ensure you have a runner with the 'ubuntu-latest' label
+
+    # Environment variables for the C/C++ compiler
+    env:
+      CC: gcc
+      CXX: g++
 
     steps:
-    - uses: actions/checkout@v2
-    - name: configure
-      shell: cmake -P {0}
-      run: |
-        set(ENV{CC} ${{matrix.config.cc}})
-        set(ENV{CXX} ${{matrix.config.cxx}})
-    - name: generate
-      run: |
-        mkdir build
-        cd build
-        cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}} ..
-    - name: build
-      run: cmake --build build --config ${{matrix.config.build_type}}
+      # Step 1: Check out the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4 # Updated to the latest version for best practice
+        # Note for Gitea: Ensure your instance can access this action or use a native 'git clone' command.
 
+      # Step 2: Configure the project and build it
+      - name: Configure and Build
+        run: |
+          # Configure using CMake. The -B flag creates the 'build' directory.
+          # The build type is now hardcoded to 'Debug'.
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON .
+
+          # Build the project using the generated configuration.
+          cmake --build build --config Debug
