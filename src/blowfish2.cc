@@ -727,22 +727,27 @@ static const std::array<std::array<uint64_t, 256>, 8> S = {
       0xBF2FAD7CDA8F11B8, 0x9B14B76D08EF72BE, 0x8A0E0EEC190EBEBA,
       0x8CF97F6ECE339C68}}};
 
-void Blowfish2::initialize(std::string const &key) {
-  uint64_t data, datal, datar;
-  Sboxes = S;
-  uint64_t j = 0, keylength = key.length();
+void Blowfish2::initialize(const std::string &key) {
+  initialize(reinterpret_cast<const uint8_t *>(key.data()), key.size());
+}
+
+void Blowfish2::initialize(const uint8_t *key, size_t keylen) {
+  uint64_t data = 0;
+  uint64_t datal = 0;
+  uint64_t datar = 0;
+
+  Sboxes = S; // assumes static const S exists
+
+  size_t j = 0;
+
   for (uint64_t i = 0; i < N + 2; ++i) {
-    data = 0x00000000;
+    data = 0;
     for (uint64_t k = 0; k < 8; ++k) {
       data = (data << 8) | key[j];
-      if (++j >= keylength) {
-        j = 0;
-      }
+      j = (j + 1) % keylen;
     }
     PArray[i] = P[i] ^ data;
   }
-  datal = 0x00000000;
-  datar = 0x00000000;
 
   for (uint64_t i = 0; i < N + 2; i += 2) {
     encrypt(datal, datar);
@@ -759,9 +764,7 @@ void Blowfish2::initialize(std::string const &key) {
   }
 }
 
-Blowfish2::Blowfish2(std::string const &key) { initialize(key); }
-
-uint64_t Blowfish2::F(uint64_t x) {
+uint64_t Blowfish2::F(uint64_t x) const noexcept {
   unsigned int a, b, c, d, e, f, g, h;
   uint64_t y;
 
@@ -791,7 +794,7 @@ uint64_t Blowfish2::F(uint64_t x) {
   return y;
 }
 
-void Blowfish2::encrypt(uint64_t &xl, uint64_t &xr) {
+void Blowfish2::encrypt(uint64_t &xl, uint64_t &xr) noexcept {
   uint64_t Xl = xl;
   uint64_t Xr = xr;
 
@@ -808,7 +811,7 @@ void Blowfish2::encrypt(uint64_t &xl, uint64_t &xr) {
   xr = Xr;
 }
 
-void Blowfish2::decrypt(uint64_t &xl, uint64_t &xr) {
+void Blowfish2::decrypt(uint64_t &xl, uint64_t &xr) noexcept {
   uint64_t Xl = xl;
   uint64_t Xr = xr;
 

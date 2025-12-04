@@ -4,32 +4,35 @@
 // Original Blowfish 2 Algorithm copyright:
 // SPDX-FileCopyrightText: 2005 Alexander Pukall
 
-#include <algorithm>
+#pragma once
 #include <array>
 #include <cstdint>
 #include <string>
 
-#define MAXKEYBYTES 56 // 4224 bits max
-#define N 64
+#define MAXKEYBYTES 56 // 448 bits max
 
 #if !defined(BLOWFISH_BLOWFISH2_H_)
 #define BLOWFISH_BLOWFISH2_H_
 
 class Blowfish2 {
 private:
-  std::array<uint64_t, N + 2> PArray;
-  std::array<std::array<uint64_t, 256>, 8> Sboxes;
-  uint64_t F(uint64_t x);
+  static constexpr uint64_t N = 64;
+  std::array<uint64_t, N + 2> PArray{};
+  std::array<std::array<uint64_t, 256>, 8> Sboxes{};
+  uint64_t F(uint64_t x) const noexcept;
 
 public:
-  Blowfish2() {}
-  Blowfish2(std::string const &key);
-  Blowfish2(Blowfish2 const &) = delete;
+  Blowfish2() = default;
+  explicit Blowfish2(const std::string &key) { initialize(key); }
+
+  Blowfish2(const Blowfish2 &) = delete;
+  Blowfish2 &operator=(const Blowfish2 &) = delete;
 
   void initialize(std::string const &key);
+  void initialize(const uint8_t *key, size_t keylen);
 
-  void encrypt(uint64_t &xl, uint64_t &xr);
-  void decrypt(uint64_t &xl, uint64_t &xr);
+  void encrypt(uint64_t &xl, uint64_t &xr) noexcept;
+  void decrypt(uint64_t &xl, uint64_t &xr) noexcept;
 };
 
 #endif // BLOWFISH_BLOWFISH2_H_

@@ -225,22 +225,22 @@ static const std::array<std::array<uint32_t, 256>, 4> S = {
       0x3F09252DL, 0xC208E69FL, 0xB74E6132L, 0xCE77E25BL, 0x578FDFE3L,
       0x3AC372E6L}}};
 
-void Blowfish::initialize(std::string const &key) {
-  uint32_t data, datal, datar;
+void Blowfish::initialize(const uint8_t *key, size_t keylen) {
+  uint32_t data = 0;
+  uint32_t datal = 0;
+  uint32_t datar = 0;
+
   Sboxes = S;
-  uint32_t j = 0, keylength = key.length();
+
+  size_t j = 0;
   for (uint32_t i = 0; i < N + 2; ++i) {
-    data = 0x00000000;
+    data = 0;
     for (uint32_t k = 0; k < 4; ++k) {
       data = (data << 8) | key[j];
-      if (++j >= keylength) {
-        j = 0;
-      }
+      j = (j + 1) % keylen;
     }
     PArray[i] = P[i] ^ data;
   }
-  datal = 0x00000000;
-  datar = 0x00000000;
 
   for (uint32_t i = 0; i < N + 2; i += 2) {
     encrypt(datal, datar);
@@ -257,29 +257,28 @@ void Blowfish::initialize(std::string const &key) {
   }
 }
 
-Blowfish::Blowfish(std::string const &key) { initialize(key); }
+void Blowfish::initialize(const std::string &key) {
+  initialize(reinterpret_cast<const uint8_t *>(key.data()), key.size());
+}
 
-uint32_t Blowfish::F(uint32_t x) {
-  uint16_t a, b, c, d;
-  uint32_t y;
+Blowfish::Blowfish(const std::string &key) : PArray{}, Sboxes{} {
+  initialize(key);
+}
 
-  d = (unsigned int)(x & 0xFF);
-  x >>= 8;
-  d = (unsigned int)(x & 0xFF);
-  x >>= 8;
-  c = (unsigned int)(x & 0xFF);
-  x >>= 8;
-  b = (unsigned int)(x & 0xFF);
-  x >>= 8;
-  a = (unsigned int)(x & 0xFF);
+uint32_t Blowfish::F(uint32_t x) const noexcept {
+  uint8_t a = (x >> 24) & 0xFF;
+  uint8_t b = (x >> 16) & 0xFF;
+  uint8_t c = (x >> 8) & 0xFF;
+  uint8_t d = x & 0xFF;
 
-  y = Sboxes[0][a] + Sboxes[1][b];
+  uint32_t y = Sboxes[0][a] + Sboxes[1][b];
   y ^= Sboxes[2][c];
   y += Sboxes[3][d];
+
   return y;
 }
 
-void Blowfish::encrypt(uint32_t &xl, uint32_t &xr) {
+void Blowfish::encrypt(uint32_t &xl, uint32_t &xr) noexcept {
   uint32_t Xl = xl;
   uint32_t Xr = xr;
 
@@ -296,13 +295,13 @@ void Blowfish::encrypt(uint32_t &xl, uint32_t &xr) {
   xr = Xr;
 }
 
-void Blowfish::decrypt(uint32_t &xl, uint32_t &xr) {
+void Blowfish::decrypt(uint32_t &xl, uint32_t &xr) noexcept {
   uint32_t Xl = xl;
   uint32_t Xr = xr;
 
-  for (uint32_t i = N + 1; i > 1; --i) {
+  for (int i = N + 1; i >= 2; --i) {
     Xl ^= PArray[i];
-    Xr = F(Xl) ^ Xr;
+    Xr ^= F(Xl);
     std::swap(Xl, Xr);
   }
 
@@ -311,4 +310,10 @@ void Blowfish::decrypt(uint32_t &xl, uint32_t &xr) {
   Xl ^= PArray[0];
   xl = Xl;
   xr = Xr;
+}
+Blowfish::~Blowfish() {
+  std::fill(PArray.begin(), PArray.end(), 0);
+  for (auto &row : Sboxes) {
+    std::fill(row.begin(), row.end(), 0);
+  }
 }
