@@ -1,53 +1,54 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.30)
 project(blowfish VERSION 1.0.0 LANGUAGES CXX)
 
+message(STATUS "CMake version: ${CMAKE_VERSION}")
+message(STATUS "Project version: ${PROJECT_VERSION}")
 
-if (NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 14)
-elseif (CMAKE_CXX_STANDARD LESS 11)
-    message(WARNING "CMAKE_CXX_STANDARD has been set to '${CMAKE_CXX_STANDARD}' which is lower than the minimum required standard (c++14).")
-endif ()
+# ===== compiler settings =====
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-message(STATUS "Using C++ standard c++${CMAKE_CXX_STANDARD}")
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+message(STATUS "Using C++ standard c++${CMAKE_CXX_STANDARD}")
 
-message (STATUS "CMake version: ${CMAKE_VERSION}")
-message (STATUS "Project version: ${PROJECT_VERSION}")
+set(BF_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
-set(BLOWFISH_SRC ${PROJECT_SOURCE_DIR}/src/blowfish.cc)
-set(BLOWFISH2_SRC ${PROJECT_SOURCE_DIR}/src/blowfish2.cc)
-source_group(src FILES ${BLOWFISH_SRC} ${BLOWFISH2_SRC})
+# ===== blowfish library =====
+add_library(blowfish)
+target_compile_features(blowfish PUBLIC cxx_std_17)
 
-set(BLOWFISH_TEST ${PROJECT_SOURCE_DIR}/tests/Main.cpp)
-set(BLOWFISH2_TEST ${PROJECT_SOURCE_DIR}/tests/Main2.cpp)
-source_group(tests FILES ${BLOWFISH_TEST} ${BLOWFISH2_TEST})
-
-set(BLOWFISH_INC ${PROJECT_SOURCE_DIR}/include/blowfish/blowfish.h)
-set(BLOWFISH2_INC ${PROJECT_SOURCE_DIR}/include/blowfish/blowfish2.h)
-source_group(include FILES ${BLOWFISH_INC} ${BLOWFISH2_INC})
-
-set(BLOWFISH_DOC 
-    README.md
-    LICENSE
+target_sources(blowfish
+    PRIVATE
+        src/blowfish.cc
+    PUBLIC FILE_SET HEADERS
+        BASE_DIRS ${BF_INCLUDE_DIR}
+        FILES include/blowfish/blowfish.h
 )
-source_group(doc FILES ${BLOWFISH_DOC})
 
-set(BLOWFISH_SCRIPTS
-    .gitattributes
-    .gitignore
-    build.sh
+target_include_directories(blowfish PUBLIC ${BF_INCLUDE_DIR})
+
+# ===== blowfish2 library =====
+add_library(blowfish2)
+target_compile_features(blowfish2 PUBLIC cxx_std_14)
+
+target_sources(blowfish2
+    PRIVATE
+        src/blowfish2.cc
+    PUBLIC FILE_SET HEADERS
+        BASE_DIRS ${BF_INCLUDE_DIR}
+        FILES include/blowfish/blowfish2.h
 )
-source_group(scripts FILES ${BLOWFISH_SCRIPTS})
 
-add_library(blowfish ${BLOWFISH_SRC} ${BLOWFISH_INC} ${BLOWFISH_SCRIPTS} ${BLOWFISH_DOC})
-add_library(blowfish2 ${BLOWFISH2_SRC} ${BLOWFISH2_INC} ${BLOWFISH_SCRIPTS} ${BLOWFISH_DOC})
+target_include_directories(blowfish2 PUBLIC ${BF_INCLUDE_DIR})
 
-target_include_directories(blowfish PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(blowfish2 PUBLIC ${PROJECT_SOURCE_DIR}/include)
+# ===== Tests =====
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(bf_test tests/Main.cpp)
+    target_link_libraries(bf_test PRIVATE blowfish)
+    add_test(NAME bf_test COMMAND bf_test)
 
-add_executable(bf_test ${BLOWFISH_TEST} ${BLOWFISH_SRC} ${BLOWFISH_INC})
-add_executable(bf2_test ${BLOWFISH2_TEST} ${BLOWFISH2_SRC} ${BLOWFISH2_INC})
-
-target_include_directories(bf_test PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_include_directories(bf2_test PUBLIC ${PROJECT_SOURCE_DIR}/include)
-
+    add_executable(bf2_test tests/Main2.cpp)
+    target_link_libraries(bf2_test PRIVATE blowfish2)
+    add_test(NAME bf2_test COMMAND bf2_test)
+endif()

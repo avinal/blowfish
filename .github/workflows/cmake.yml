@@ -1,29 +1,24 @@
-name: Build C++ Project
-
-on: [push]
-
+name: Build and Test
+on: [push, pull_request]
 jobs:
   build:
-    name: Build on Ubuntu with GCC
-    runs-on: ubuntu-latest # For Gitea, ensure you have a runner with the 'ubuntu-latest' label
-
-    # Environment variables for the C/C++ compiler
-    env:
-      CC: gcc
-      CXX: g++
-
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: {compiler: [gcc, clang], build_type: [Release, Debug]}
     steps:
-      # Step 1: Check out the repository code
-      - name: Checkout repository
-        uses: actions/checkout@v4 # Updated to the latest version for best practice
-        # Note for Gitea: Ensure your instance can access this action or use a native 'git clone' command.
-
-      # Step 2: Configure the project and build it
-      - name: Configure and Build
-        run: |
-          # Configure using CMake. The -B flag creates the 'build' directory.
-          # The build type is now hardcoded to 'Debug'.
-          cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON .
-
-          # Build the project using the generated configuration.
-          cmake --build build --config Debug
+      - uses: actions/checkout@v4
+      - name: Install deps
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+      - name: Build
+        run: cmake --build build -j
+      - name: Run tests
+        run: ctest --output-on-failure -C ${{ matrix.build_type }} -V
+  sanitize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+      - run: cmake --build build -j
+      - run: ctest --output-on-failure -C Debug -V
