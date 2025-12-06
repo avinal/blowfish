@@ -1,24 +1,33 @@
 name: Build and Test
+
 on: [push, pull_request]
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix: {compiler: [gcc, clang], build_type: [Release, Debug]}
+
     steps:
       - uses: actions/checkout@v4
-      - name: Install deps
-        run: sudo apt-get update && sudo apt-get install -y build-essential cmake
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+      - name: Install latest CMake
+        run: |
+          python3 -m venv $HOME/cmake-venv
+          source $HOME/cmake-venv/bin/activate
+          pip install --upgrade pip
+          pip install cmake
+          echo "$HOME/cmake-venv/bin" >> $GITHUB_PATH
+
+      - name: Configure with sanitizers
+        run: |
+          SAN="-fsanitize=address,undefined -fno-omit-frame-pointer"
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_FLAGS="$SAN" \
+            -DCMAKE_CXX_FLAGS="$SAN"
+
       - name: Build
         run: cmake --build build -j
+
       - name: Run tests
-        run: ctest --output-on-failure -C ${{ matrix.build_type }} -V
-  sanitize:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
-      - run: cmake --build build -j
-      - run: ctest --output-on-failure -C Debug -V
+        working-directory: build
+        run: ctest --output-on-failure
