@@ -6,7 +6,7 @@
 
 #include <blowfish/blowfish2.h>
 
-static const std::array<uint64_t, 64 + 2> P = {
+static const std::array<uint64_t, 64 + 2> BF2_PARRAY_INIT = {
     0x243F6A8885A308D3, 0x13198A2E03707344, 0xA4093822299F31D0,
     0x082EFA98EC4E6C89, 0x452821E638D01377, 0xBE5466CF34E90C6C,
     0xC0AC29B7C97C50DD, 0x3F84D5B5B5470917, 0x9216D5D98979FB1B,
@@ -30,7 +30,7 @@ static const std::array<uint64_t, 64 + 2> P = {
     0x1BFEDF72429B023D, 0x37D0D724D00A1248, 0xDB0FEAD349F1C09B,
     0x075372C980991B7B, 0x25D479D8F6E8DEF7, 0xE3FE501AB6794C3B};
 
-static const std::array<std::array<uint64_t, 256>, 8> S = {
+static const std::array<std::array<uint64_t, 256>, 8> BF2_SBOX_INIT = {
     {{0x976CE0BD04C006BA, 0xC1A94FB6409F60C4, 0x5E5C9EC2196A2463,
       0x68FB6FAF3E6C53B5, 0x1339B2EB3B52EC6F, 0x6DFC511F9B30952C,
       0xCC814544AF5EBD09, 0xBEE3D004DE334AFD, 0x660F2807192E4BB3,
@@ -736,20 +736,20 @@ void Blowfish2::initialize(const uint8_t *key, size_t keylen) {
   uint64_t datal = 0;
   uint64_t datar = 0;
 
-  Sboxes = S; // assumes static const S exists
+  Sboxes = BF2_SBOX_INIT; // assumes static const S exists
 
   size_t j = 0;
 
-  for (uint64_t i = 0; i < N + 2; ++i) {
+  for (uint64_t i = 0; i < BF2_NUM_ROUNDS + 2; ++i) {
     data = 0;
     for (uint64_t k = 0; k < 8; ++k) {
       data = (data << 8) | key[j];
       j = (j + 1) % keylen;
     }
-    PArray[i] = P[i] ^ data;
+    PArray[i] = BF2_PARRAY_INIT[i] ^ data;
   }
 
-  for (uint64_t i = 0; i < N + 2; i += 2) {
+  for (uint64_t i = 0; i < BF2_NUM_ROUNDS + 2; i += 2) {
     encrypt(datal, datar);
     PArray[i] = datal;
     PArray[i + 1] = datar;
@@ -798,15 +798,15 @@ void Blowfish2::encrypt(uint64_t &xl, uint64_t &xr) noexcept {
   uint64_t Xl = xl;
   uint64_t Xr = xr;
 
-  for (uint64_t i = 0; i < N; ++i) {
+  for (uint64_t i = 0; i < BF2_NUM_ROUNDS; ++i) {
     Xl ^= PArray[i];
     Xr = F(Xl) ^ Xr;
     std::swap(Xl, Xr);
   }
 
   std::swap(Xl, Xr);
-  Xr ^= PArray[N];
-  Xl ^= PArray[N + 1];
+  Xr ^= PArray[BF2_NUM_ROUNDS];
+  Xl ^= PArray[BF2_NUM_ROUNDS + 1];
   xl = Xl;
   xr = Xr;
 }
@@ -815,7 +815,7 @@ void Blowfish2::decrypt(uint64_t &xl, uint64_t &xr) noexcept {
   uint64_t Xl = xl;
   uint64_t Xr = xr;
 
-  for (uint64_t i = N + 1; i > 1; --i) {
+  for (uint64_t i = BF2_NUM_ROUNDS + 1; i > 1; --i) {
     Xl ^= PArray[i];
     Xr = F(Xl) ^ Xr;
     std::swap(Xl, Xr);

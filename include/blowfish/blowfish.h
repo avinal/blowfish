@@ -9,15 +9,15 @@
 #include <cstdint>
 #include <string>
 
-#define MAXKEYBYTES 56 // 448 bits max
-static constexpr uint32_t N = 16;
+static constexpr uint32_t BF_NUM_ROUNDS = 16;
+static constexpr uint32_t BF_MAX_KEYBYTES = 56;
 
 #if !defined(BLOWFISH_BLOWFISH_H_)
 #define BLOWFISH_BLOWFISH_H_
 
 class Blowfish {
 private:
-  std::array<uint32_t, N + 2> PArray{};
+  std::array<uint32_t, BF_NUM_ROUNDS + 2> PArray{};
   std::array<std::array<uint32_t, 256>, 4> Sboxes{};
   uint32_t F(uint32_t x) const noexcept;
 

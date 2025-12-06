@@ -6,13 +6,13 @@
 
 #include <blowfish/blowfish.h>
 
-static const std::array<uint32_t, 16 + 2> P = {
+static const std::array<uint32_t, 16 + 2> BF_PARRAY_INIT = {
     0x243F6A88L, 0x85A308D3L, 0x13198A2EL, 0x03707344L, 0xA4093822L,
     0x299F31D0L, 0x082EFA98L, 0xEC4E6C89L, 0x452821E6L, 0x38D01377L,
     0xBE5466CFL, 0x34E90C6CL, 0xC0AC29B7L, 0xC97C50DDL, 0x3F84D5B5L,
     0xB5470917L, 0x9216D5D9L, 0x8979FB1BL};
 
-static const std::array<std::array<uint32_t, 256>, 4> S = {
+static const std::array<std::array<uint32_t, 256>, 4> BF_SBOX_INT = {
     {{0xD1310BA6L, 0x98DFB5ACL, 0x2FFD72DBL, 0xD01ADFB7L, 0xB8E1AFEDL,
       0x6A267E96L, 0xBA7C9045L, 0xF12C7F99L, 0x24A19947L, 0xB3916CF7L,
       0x0801F2E2L, 0x858EFC16L, 0x636920D8L, 0x71574E69L, 0xA458FEA3L,
@@ -230,19 +230,19 @@ void Blowfish::initialize(const uint8_t *key, size_t keylen) {
   uint32_t datal = 0;
   uint32_t datar = 0;
 
-  Sboxes = S;
+  Sboxes = BF_SBOX_INT;
 
   size_t j = 0;
-  for (uint32_t i = 0; i < N + 2; ++i) {
+  for (uint32_t i = 0; i < BF_NUM_ROUNDS + 2; ++i) {
     data = 0;
     for (uint32_t k = 0; k < 4; ++k) {
       data = (data << 8) | key[j];
       j = (j + 1) % keylen;
     }
-    PArray[i] = P[i] ^ data;
+    PArray[i] = BF_PARRAY_INIT[i] ^ data;
   }
 
-  for (uint32_t i = 0; i < N + 2; i += 2) {
+  for (uint32_t i = 0; i < BF_NUM_ROUNDS + 2; i += 2) {
     encrypt(datal, datar);
     PArray[i] = datal;
     PArray[i + 1] = datar;
@@ -282,15 +282,15 @@ void Blowfish::encrypt(uint32_t &xl, uint32_t &xr) noexcept {
   uint32_t Xl = xl;
   uint32_t Xr = xr;
 
-  for (uint32_t i = 0; i < N; ++i) {
+  for (uint32_t i = 0; i < BF_NUM_ROUNDS; ++i) {
     Xl ^= PArray[i];
     Xr = F(Xl) ^ Xr;
     std::swap(Xl, Xr);
   }
 
   std::swap(Xl, Xr);
-  Xr ^= PArray[N];
-  Xl ^= PArray[N + 1];
+  Xr ^= PArray[BF_NUM_ROUNDS];
+  Xl ^= PArray[BF_NUM_ROUNDS + 1];
   xl = Xl;
   xr = Xr;
 }
@@ -299,7 +299,7 @@ void Blowfish::decrypt(uint32_t &xl, uint32_t &xr) noexcept {
   uint32_t Xl = xl;
   uint32_t Xr = xr;
 
-  for (int i = N + 1; i >= 2; --i) {
+  for (int i = BF_NUM_ROUNDS + 1; i >= 2; --i) {
     Xl ^= PArray[i];
     Xr ^= F(Xl);
     std::swap(Xl, Xr);
