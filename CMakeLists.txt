@@ -43,12 +43,30 @@ target_include_directories(blowfish2 PUBLIC ${BF_INCLUDE_DIR})
 
 # ===== Tests =====
 include(CTest)
-if(BUILD_TESTING)
-    add_executable(bf_test tests/Main.cpp)
-    target_link_libraries(bf_test PRIVATE blowfish)
-    add_test(NAME bf_test COMMAND bf_test)
+if (BUILD_TESTING)
 
-    add_executable(bf2_test tests/Main2.cpp)
+    # ---- Blowfish Test ----
+    add_executable(bf_test
+        tests/Main.cpp
+        tests/test_framework.h
+        tests/test_vectors.cpp
+        tests/test_roundtrip.cpp
+        tests/test_avalanche.cpp
+        tests/test_properties.cpp
+    )
+    target_link_libraries(bf_test PRIVATE blowfish)
+    add_test(NAME BlowfishTests COMMAND bf_test)
+
+    # ---- Blowfish2 Test ----
+    add_executable(bf2_test
+        tests/Main2.cpp
+        tests/test_framework.h
+        tests/bf2_test_vectors.cpp
+        tests/bf2_test_roundtrip.cpp
+        tests/bf2_test_avalanche.cpp
+        tests/bf2_test_properties.cpp
+    )
     target_link_libraries(bf2_test PRIVATE blowfish2)
-    add_test(NAME bf2_test COMMAND bf2_test)
+    add_test(NAME Blowfish2Tests COMMAND bf2_test)
+
 endif()
