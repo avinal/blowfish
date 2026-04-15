@@ -5,6 +5,7 @@
 // SPDX-FileCopyrightText: 1997 Paul Kocher
 
 #include <blowfish/blowfish.h>
+#include <stdexcept>
 
 static const std::array<uint32_t, 16 + 2> BF_PARRAY_INIT = {
     0x243F6A88L, 0x85A308D3L, 0x13198A2EL, 0x03707344L, 0xA4093822L,
@@ -12,7 +13,7 @@ static const std::array<uint32_t, 16 + 2> BF_PARRAY_INIT = {
     0xBE5466CFL, 0x34E90C6CL, 0xC0AC29B7L, 0xC97C50DDL, 0x3F84D5B5L,
     0xB5470917L, 0x9216D5D9L, 0x8979FB1BL};
 
-static const std::array<std::array<uint32_t, 256>, 4> BF_SBOX_INT = {
+static const std::array<std::array<uint32_t, 256>, 4> BF_SBOX_INIT = {
     {{0xD1310BA6L, 0x98DFB5ACL, 0x2FFD72DBL, 0xD01ADFB7L, 0xB8E1AFEDL,
       0x6A267E96L, 0xBA7C9045L, 0xF12C7F99L, 0x24A19947L, 0xB3916CF7L,
       0x0801F2E2L, 0x858EFC16L, 0x636920D8L, 0x71574E69L, 0xA458FEA3L,
@@ -226,11 +227,15 @@ static const std::array<std::array<uint32_t, 256>, 4> BF_SBOX_INT = {
       0x3AC372E6L}}};
 
 void Blowfish::initialize(const uint8_t *key, size_t keylen) {
+  if (key == nullptr || keylen == 0 || keylen > BF_MAX_KEYBYTES)
+    throw std::invalid_argument(
+        "Blowfish key must be non-null and between 1 and 56 bytes");
+
   uint32_t data = 0;
   uint32_t datal = 0;
   uint32_t datar = 0;
 
-  Sboxes = BF_SBOX_INT;
+  Sboxes = BF_SBOX_INIT;
 
   size_t j = 0;
   for (uint32_t i = 0; i < BF_NUM_ROUNDS + 2; ++i) {
@@ -312,8 +317,12 @@ void Blowfish::decrypt(uint32_t &xl, uint32_t &xr) noexcept {
   xr = Xr;
 }
 Blowfish::~Blowfish() {
-  std::fill(PArray.begin(), PArray.end(), 0);
+  volatile uint32_t *p = PArray.data();
+  for (size_t i = 0; i < PArray.size(); ++i)
+    p[i] = 0;
   for (auto &row : Sboxes) {
-    std::fill(row.begin(), row.end(), 0);
+    volatile uint32_t *s = row.data();
+    for (size_t i = 0; i < row.size(); ++i)
+      s[i] = 0;
   }
 }
