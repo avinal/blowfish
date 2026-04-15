@@ -5,6 +5,7 @@
 // SPDX-FileCopyrightText: 2005 Alexander Pukall
 
 #include <blowfish/blowfish2.h>
+#include <stdexcept>
 
 static const std::array<uint64_t, 64 + 2> BF2_PARRAY_INIT = {
     0x243F6A8885A308D3, 0x13198A2E03707344, 0xA4093822299F31D0,
@@ -732,11 +733,15 @@ void Blowfish2::initialize(const std::string &key) {
 }
 
 void Blowfish2::initialize(const uint8_t *key, size_t keylen) {
+  if (key == nullptr || keylen == 0 || keylen > BF2_MAX_KEYBYTES)
+    throw std::invalid_argument(
+        "Blowfish2 key must be non-null and between 1 and 56 bytes");
+
   uint64_t data = 0;
   uint64_t datal = 0;
   uint64_t datar = 0;
 
-  Sboxes = BF2_SBOX_INIT; // assumes static const S exists
+  Sboxes = BF2_SBOX_INIT;
 
   size_t j = 0;
 
@@ -826,4 +831,15 @@ void Blowfish2::decrypt(uint64_t &xl, uint64_t &xr) noexcept {
   Xl ^= PArray[0];
   xl = Xl;
   xr = Xr;
+}
+
+Blowfish2::~Blowfish2() {
+  volatile uint64_t *p = PArray.data();
+  for (size_t i = 0; i < PArray.size(); ++i)
+    p[i] = 0;
+  for (auto &row : Sboxes) {
+    volatile uint64_t *s = row.data();
+    for (size_t i = 0; i < row.size(); ++i)
+      s[i] = 0;
+  }
 }

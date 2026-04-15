@@ -5,15 +5,16 @@
 // SPDX-FileCopyrightText: 1997 Paul Kocher
 
 #pragma once
+
+#if !defined(BLOWFISH_BLOWFISH_H_)
+#define BLOWFISH_BLOWFISH_H_
+
 #include <array>
 #include <cstdint>
 #include <string>
 
 static constexpr uint32_t BF_NUM_ROUNDS = 16;
 static constexpr uint32_t BF_MAX_KEYBYTES = 56;
-
-#if !defined(BLOWFISH_BLOWFISH_H_)
-#define BLOWFISH_BLOWFISH_H_
 
 class Blowfish {
 private:
@@ -25,6 +26,7 @@ public:
   Blowfish() = default;
   explicit Blowfish(std::string const &key);
   Blowfish(Blowfish const &) = delete;
+  Blowfish &operator=(const Blowfish &) = delete;
 
   void initialize(const uint8_t *key, size_t keylen);
   void initialize(const std::string &key);

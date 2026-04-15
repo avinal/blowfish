@@ -5,15 +5,16 @@
 // SPDX-FileCopyrightText: 2005 Alexander Pukall
 
 #pragma once
+
+#if !defined(BLOWFISH_BLOWFISH2_H_)
+#define BLOWFISH_BLOWFISH2_H_
+
 #include <array>
 #include <cstdint>
 #include <string>
 
 static constexpr uint64_t BF2_NUM_ROUNDS = 64;
 static constexpr uint64_t BF2_MAX_KEYBYTES = 56;
-
-#if !defined(BLOWFISH_BLOWFISH2_H_)
-#define BLOWFISH_BLOWFISH2_H_
 
 class Blowfish2 {
 private:
@@ -33,6 +34,7 @@ public:
 
   void encrypt(uint64_t &xl, uint64_t &xr) noexcept;
   void decrypt(uint64_t &xl, uint64_t &xr) noexcept;
+  ~Blowfish2();
 };
 
 #endif // BLOWFISH_BLOWFISH2_H_

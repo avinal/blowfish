@@ -29,7 +29,7 @@ target_include_directories(blowfish PUBLIC ${BF_INCLUDE_DIR})
 
 # ===== blowfish2 library =====
 add_library(blowfish2)
-target_compile_features(blowfish2 PUBLIC cxx_std_14)
+target_compile_features(blowfish2 PUBLIC cxx_std_17)
 
 target_sources(blowfish2
     PRIVATE
